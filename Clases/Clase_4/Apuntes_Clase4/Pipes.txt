@@ -1,0 +1,59 @@
+#¿QUE SON LOS PIPES?
+Un pipe (o tubería) es un mecanismo de comunicación que permite que dos procesos intercambien datos de forma unidireccional.
+
+ #CARACTERISTICAS PRINCIPALES DE PIPES:
+   -Unidireccional: los datos van en una sola dirección (de un proceso "escritor" a un proceso "lector").
+   -Basado en archivos: en muchos sistemas operativos, los pipes son tratados como archivos especiales.
+   -Sincronización implícita: si el proceso lector intenta leer antes de que el escritor haya escrito, el lector se bloquea (espera). Y viceversa.
+   -Volátil: los datos se almacenan en un buffer en memoria. Si el lector no lee los datos a tiempo y el buffer se llena, el escritor se bloquea.
+
+#ejemplo de como funciona: Imaginá una cañería (pipe) que conecta dos procesos:
+    el proceso A coloca datos por un extremo (escribe)
+    el proceso B los recoge por el otro extremo (lee)
+
+# Como se implementan los pipes de forma interna?
+En unix un pipe se implementa mediante un buffer en memoria del nucleo (kernel)
+al crear un pipe
+- el sistema reserva una zona de la memoria del kernel
+-se crean dos descriptores de archivos : uno para lectura y otro para la escritura
+- los procesos van a usar estos descriptores como si fueran archivos normales: uno lee y el otro escribe
+
+#CICLO DE VIDE DE UN PIPE: creacion, fork, cierre selectivo, comunicacion, cierre y limpieza
+creacion: un proceso (padre) crea el pipe usando una llamada como os.pipe() en Python o pipe() en C
+fork: el proceso se divide en dos con fork(). Ambos procesos heredan los descriptores
+cierre selectivo:cada proceso cierra el descriptor que no usará (el escritor cierra el de lectura, el lector cierra el de escritura)
+comunicacion: el proceso escritor envía datos al pipe, y el lector los extrae
+cierre y limpieza: Cuando se termina de usar, se cierran ambos descriptores y el kernel libera el buffer del pipe
+
+comportamiento del buffer:
+si el buffer del pipe está lleno, el escritor se bloquea hasta que el lector lea
+si el buffer está vacío, el lector se bloquea hasta que haya datos
+esto evita que haya que hacer sincronización manual entre procesos: el sistema operativo lo gestiona automáticamente
+
+#POR QUE ES IMPORTANTE CERRAR EL DESCRIPTOR QUE NO SE USA?
+Se cierran los descriptores que no se usan para: evitar errores de comunicación y forzar al sistema a detectar cuándo se ha terminado la escritura 
+o lectura (esto es fundamental para evitar que un lector o escritor quede esperando "eternamente").
+
+#Estrategias para prevenir problemas comunes
+
+Los pipes son muy útiles, pero también tienen trampas ⚠️
+🔥 Problemas frecuentes
+    -Deadlocks o bloqueos
+    -Lecturas incompletas
+    -Pérdida de datos si no se cierra bien el pipe
+
+Problema	                                                   Causa	                                                                Solución
+Bloqueo de lectura	                   El proceso espera leer, pero el otro no escribe (o cerró mal)	               Siempre cerrar los extremos que no se usan, y asegurar el orden correcto
+Bloqueo de escritura	               El buffer del pipe está lleno, y el otro proceso no está leyendo	               Asegurarse de que el lector esté listo antes de escribir grandes volúmenes
+Lectura infinita	                   El lector espera EOF, pero el escritor no cerró el pipe	                        Siempre llamar a .close() después de .write()    
+
+#Reglas de oro:
+
+    ✔️ Cerrar los extremos que no se usan (¡en cada proceso!).
+
+    ✔️ Cerrar el pipe después de escribir o leer para que el otro lado reciba EOF.
+
+    ✔️ Usar .flush() si estás escribiendo en modo texto y no ves salir los datos.
+
+    ✔️ Probar en pasos cortos: primero un pipe simple, después agregá complejidad.
+    
