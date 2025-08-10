@@ -59,7 +59,7 @@ def verificar_cadena():
     with open("reporte.txt", "w") as f:
         f.write(reporte)
 
-    print("✅ Verificación completada.\n")
+    print("Verificación completada.\n")
     print(reporte)
 
 #ejecuta la verificaciion

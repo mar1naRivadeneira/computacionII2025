@@ -37,18 +37,3 @@ python3 verificar_cadena.py
 - blockchain.json: contiene los bloques generados, con sus datos y hashes.
 - reporte.txt: resumen de los bloques generados.
 
-## Formato de los bloques
-
-Cada bloque contiene:
-- Timestamp
-- Datos procesados (promedio y desvío estándar)
-- Estado de alerta (True o False)
-- Hash del bloque anterior
-- Hash propio
-
-## Condiciones de alerta
-
-Se activa una alerta si algún valor excede el rango normal:
-- Frecuencia cardíaca: 50–100 bpm
-- Presión arterial: 80–120 mmHg
-- Saturación de oxígeno: 95–100 %

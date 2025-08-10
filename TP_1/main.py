@@ -9,6 +9,15 @@ import os
 
 # ---------- Función para generar una muestra biométrica ----------
 def generar_muestra():
+    # 15% de probabilidad de generar datos fuera de rango para pruebas
+    if random.random() < 0.15:
+        return {
+            "timestamp": datetime.now().isoformat(),
+            "frecuencia": random.randint(180, 220),  # puede superar 200
+            "presion": [random.randint(180, 220), random.randint(70, 110)],  # sistólica puede superar 200
+            "oxigeno": random.randint(85, 105)  # puede estar fuera de 90-100
+        }
+    # Resto del tiempo datos normales
     return {
         "timestamp": datetime.now().isoformat(),
         "frecuencia": random.randint(60, 180),
@@ -60,46 +69,61 @@ def analizador(tipo, pipe, queue):
 def verificador(queue_a, queue_b, queue_c):
     blockchain = []
     prev_hash = "0" * 64  
-    contador = 0
+    contador = 1
+    buffer_resultados = {}  # Guarda resultados hasta tener las 3 métricas por timestamp
 
-    while contador < 60:
-        res_a = queue_a.get()
-        res_b = queue_b.get()
-        res_c = queue_c.get()
+    while contador <= 60:
+        # Recibe un resultado de cualquiera de las colas
+        for queue in (queue_a, queue_b, queue_c):
+            res = queue.get()
+            ts = res["timestamp"]
 
-        ts = res_a["timestamp"]
-        if res_b["timestamp"] != ts or res_c["timestamp"] != ts:
-            continue  
+            if ts not in buffer_resultados:
+                buffer_resultados[ts] = {}
 
-        datos = {
-            "frecuencia": {"media": res_a["media"], "desv": res_a["desv"]},
-            "presion": {"media": res_b["media"], "desv": res_b["desv"]},
-            "oxigeno": {"media": res_c["media"], "desv": res_c["desv"]}
-        }
+            buffer_resultados[ts][res["tipo"]] = {
+                "media": res["media"],
+                "desv": res["desv"]
+            }
 
-        # Verificar condiciones de alerta
-        alerta = False
-        if res_a["media"] >= 200:
-            alerta = True
-        if not (90 <= res_c["media"] <= 100):
-            alerta = True
-        if res_b["media"] >= 200:
-            alerta = True
+            # Si ya tenemos las 3 métricas para este timestamp, creamos bloque
+            if len(buffer_resultados[ts]) == 3:
+                datos = {
+                    "frecuencia": buffer_resultados[ts]["frecuencia"],
+                    "presion": buffer_resultados[ts]["presion"],
+                    "oxigeno": buffer_resultados[ts]["oxigeno"]
+                }
 
-        bloque = {
-            "timestamp": ts,
-            "datos": datos,
-            "alerta": alerta,
-            "prev_hash": prev_hash
-        }
-       
-        bloque["hash"] = calcular_hash(prev_hash, datos, ts)
-        prev_hash = bloque["hash"]
-        blockchain.append(bloque)
+                # Verificar condiciones de alerta
+                motivos_alerta = []
+                if datos["frecuencia"]["media"] >= 200:
+                    motivos_alerta.append("frecuencia")
+                if not (90 <= datos["oxigeno"]["media"] <= 100):
+                    motivos_alerta.append("oxígeno")
+                if datos["presion"]["media"] >= 200:
+                    motivos_alerta.append("presión")
 
-        print(f"[Bloque {contador}] Hash: {bloque['hash'][:8]}... | Alerta: {bloque['alerta']}")
-        contador += 1
+                alerta = len(motivos_alerta) > 0
 
+                bloque = {
+                    "timestamp": ts,
+                    "datos": datos,
+                    "alerta": alerta,
+                    "prev_hash": prev_hash
+                }
+               
+                bloque["hash"] = calcular_hash(prev_hash, datos, ts)
+                prev_hash = bloque["hash"]
+                blockchain.append(bloque)
+
+                if alerta:
+                    print(f"[Bloque {contador}] Hash: {bloque['hash'][:8]}... | Alerta: {', '.join(motivos_alerta)} fuera de rango")
+                else:
+                    print(f"[Bloque {contador}] Hash: {bloque['hash'][:8]}... | Alerta: false")
+
+                contador += 1
+                buffer_resultados.pop(ts)  # Eliminamos del buffer
+                break  # Volvemos al while para esperar el siguiente bloque
 
     with open("blockchain.json", "w") as f:
         json.dump(blockchain, f, indent=2)
@@ -123,7 +147,7 @@ if __name__ == "__main__":
 
     verif = multiprocessing.Process(target=verificador, args=(queue_a, queue_b, queue_c))
 
-    # inicia todos los procesos
+    # Inicia todos los procesos
     procA.start()
     procB.start()
     procC.start()

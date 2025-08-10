@@ -1,10 +1,10 @@
  Reporte de Verificación de Blockchain Biométrica
 ===============================================
 Cantidad total de bloques:     60
-Bloques con alertas:           0
+Bloques con alertas:           2
 Bloques corruptos:             0
 
-Promedio frecuencia cardíaca:  120.53 bpm
-Promedio presión sistólica:    148.19 mmHg
-Promedio saturación de oxígeno: 95.32 %
+Promedio frecuencia cardíaca:  149.96 bpm
+Promedio presión sistólica:    162.41 mmHg
+Promedio saturación de oxígeno: 95.62 %
 ===============================================
