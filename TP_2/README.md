@@ -8,7 +8,7 @@ El sistema opera en un modelo de dos servidores con comunicación transparente a
 
 | Componente | Archivo | Rol y Tecnologías Clave |
 | :--- | :--- | :--- |
-| **Servidor A (Asyncio)** | `server_scraping.py` | Extracción, API, **Cola de Tareas (Bonus 1)**, **Caché (Bonus 2)**, y **Rate Limiting (Bonus 2)**. Utiliza `aiohttp`, `async-lru`, `aiolimiter`. |
+| **Servidor A (Asyncio)** | `server_scraping.py` | Extracción, API, Cola de Tareas, Caché, y Rate Limiting. Utiliza `aiohttp`, `async-lru`, `aiolimiter`. |
 | **Servidor B (Procesamiento)** | `server_processing.py` | Ejecución paralela de operaciones intensivas (CPU-bound) como *screenshots*, análisis de rendimiento y procesamiento de imágenes. Utiliza `multiprocessing.Pool` y **Playwright**. |
 | **Comunicación A <-> B** | `common/protocol.py` | IPC con Sockets TCP y serialización `pickle` (Protocolo: Longitud + Payload). |
 | **Cliente de Prueba** | `client.py` | Interactúa con el Servidor A a través del sistema de cola (`/status`, `/result`). |
@@ -35,7 +35,7 @@ playwright install
 
 -----
 
-## ▶️ 2. Ejecución del Sistema
+##  2. Ejecución del Sistema
 
 El sistema debe iniciarse en el siguiente orden, utilizando **tres terminales** separadas desde el directorio raíz (`TP_2`).
 
