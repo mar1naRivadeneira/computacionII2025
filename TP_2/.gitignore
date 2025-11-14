@@ -1,0 +1,20 @@
+# Archivos y directorios generados por Python y el entorno virtual
+
+# Entorno virtual
+venv/
+.venv/
+
+# Archivos de caché de Python
+# Ignora cualquier directorio llamado __pycache__ en cualquier nivel
+__pycache__/
+
+# Archivos compilados de Python (bytecode)
+*.pyc
+
+# Caché de pytest
+.pytest_cache/
+
+# Caché del servidor (si se genera en el raíz)
+# Agregamos esta línea por si el servidor crea archivos temporales o logs
+*.log
+.mypy_cache/

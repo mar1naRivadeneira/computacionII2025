@@ -1,0 +1,16 @@
+
+# Core Asíncrono y Web
+aiohttp
+asyncio
+aiofiles
+aiolimiter
+async-lru
+
+# Scraping y Parsing
+beautifulsoup4
+lxml
+
+# Procesamiento de Imagen y Captura
+Pillow
+requests  
+playwright 
